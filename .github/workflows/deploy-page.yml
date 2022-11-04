@@ -54,7 +54,7 @@ jobs:
       - name: Build app
         run: |
           yarn
-          yarn build
+          yarn build --mode=production
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
