@@ -8,8 +8,6 @@ import {
   NavLink,
   NavLinkProps,
 } from "react-router-dom";
-import { useAppDispatch } from "./app/hooks";
-import { verifyAndAddFeed } from "./app/slice/feeds";
 import logoSrc from "./logo.svg";
 
 import { Home } from "./pages/Home";
@@ -28,13 +26,6 @@ const BootstrapNavLink: React.FC<NavLinkProps> = (props) => {
 };
 
 const App: React.FC = () => {
-  const dispatch = useAppDispatch();
-
-  React.useEffect(() => {
-    process.env.NODE_ENV !== "production" &&
-      dispatch(verifyAndAddFeed("https://www.lemonde.fr/rss/une.xml") as any);
-  }, []);
-
   const helmetContext = {};
   return (
     <HelmetProvider context={helmetContext}>

@@ -1,6 +1,6 @@
 const path = require("path");
+const { DefinePlugin } = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const HtmlWebpackPrerenderPlugin = require('html-webpack-prerender-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
@@ -50,10 +50,14 @@ module.exports = {
     path: path.resolve(__dirname, "build"),
   },
   plugins: [
+    new DefinePlugin({
+      __PROXY__: JSON.stringify('https://us-central1-lobs-159411.cloudfunctions.net/cors-anywhere/?u=')
+    }),
     new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({
         template: 'src/index.html',
-        title: 'Feeds'
+        title: 'Feeds',
+        hash: true,
     }),
   ],
 };
