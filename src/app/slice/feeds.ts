@@ -1,7 +1,5 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import axios, {AxiosResponse} from 'axios';
-
-declare const __PROXY__: string;
 
 export interface FeedItem { 
     source: string,
@@ -19,7 +17,8 @@ export interface FeedItem {
     }
     
 };
-export interface Feed { url: string, title: string, publishedAt: Date, updatedAt?: Date, description?: string, items: FeedItem[] }
+
+export interface Feed { url: string, title: string, publishedAt: Date, updatedAt?: Date, description?: string, items: FeedItem[], disabled?: boolean }
 
 interface InitialState {
     feeds: {[url: string]: Feed};
@@ -47,7 +46,11 @@ export const feedSlice = createSlice({
     name: 'feeds',
     initialState,
     reducers: {
-      
+      toggleFeed(state, action: PayloadAction<string>) {
+        if (typeof state.feeds[action.payload] !== 'undefined') {
+            state.feeds[action.payload].disabled = !state.feeds[action.payload].disabled;
+        }
+      },
     },
     extraReducers(builder) {
         builder.addCase(verifyAndAddFeed.fulfilled, (state, action) => {
@@ -58,7 +61,9 @@ export const feedSlice = createSlice({
     },
   });
 
-export const isValidFeed = async (response: AxiosResponse) => {
+export const { toggleFeed } = feedSlice.actions;
+
+export const isValidFeed = (response: AxiosResponse) => {
     if (response.status !== 200) {
       return false;
     }
@@ -90,7 +95,7 @@ export const isValidFeed = async (response: AxiosResponse) => {
   const parseRSSFeed: (parser: Document, uri: string) => Feed = (parser, url) => {
       const items = Array.from(parser.querySelectorAll('item'));
       const feed: Feed = {
-          url, 
+          url,
           title: parser.querySelector('rss > channel > title')?.textContent as string,
           publishedAt: new Date(parser.querySelector('rss > channel > pubDate')?.textContent || ''),
           items: items.map(item => {
@@ -131,7 +136,7 @@ export const isValidFeed = async (response: AxiosResponse) => {
       const entries = Array.from(parser.querySelectorAll('entry'));
 
       const feed: Feed = {
-        url, 
+        url,
         title: parser.querySelector('feed > title')?.textContent as string,
         description: parser.querySelector('feed > subtitle')?.textContent as string,
         publishedAt: new Date(parser.querySelector('feed > updated')?.textContent || ''),

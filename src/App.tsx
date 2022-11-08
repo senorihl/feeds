@@ -1,5 +1,5 @@
 import React from "react";
-import { HelmetProvider } from "react-helmet-async";
+import {Helmet, HelmetProvider} from "react-helmet-async";
 import {
   HashRouter,
   Route,
@@ -11,6 +11,7 @@ import {
 import logoSrc from "./logo.svg";
 
 import { Home } from "./pages/Home";
+import {Subscriptions} from "./pages/Subscriptions";
 
 const BootstrapNavLink: React.FC<NavLinkProps> = (props) => {
   return (
@@ -26,32 +27,42 @@ const BootstrapNavLink: React.FC<NavLinkProps> = (props) => {
 };
 
 const App: React.FC = () => {
-  const helmetContext = {};
+  const helmetContext = {
+    titleTemplate: "%s | MyAwesomeWebsite.com"
+  };
   return (
-    <HelmetProvider context={helmetContext}>
+    <HelmetProvider>
+      <Helmet titleTemplate={"%s | Feeds"}></Helmet>
       <HashRouter>
-        <div className="container">
-          <header className="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+          <nav className="navbar navbar-expand-lg bg-light">
+            <div className="container-fluid">
+
             <Link
               to={"/"}
-              className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none"
+              className="navbar-brand"
             >
-              <span className="fs-4"></span>
               <img src={logoSrc} height={40} />
             </Link>
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              <span className="navbar-toggler-icon"></span>
+            </button>
 
-            <ul className="nav nav-pills">
-              <li className="nav-item">
-                <BootstrapNavLink to={"/"} className="nav-link">
-                  Home
-                </BootstrapNavLink>
-              </li>
-            </ul>
-          </header>
+            <div className="collapse navbar-collapse" id="navbarNav">
+              <ul className="navbar-nav">
+                <li className="nav-item">
+                  <BootstrapNavLink to={"/subscriptions"} className="nav-link">Subscriptions</BootstrapNavLink>
+                </li>
+              </ul>
+            </div>
+            </div>
+          </nav>
+        <div className="container-fluid mt-3">
+          <Routes>
+            <Route path="/" element={<Home />}></Route>
+            <Route path="/subscriptions" element={<Subscriptions />}></Route>
+          </Routes>
         </div>
-        <Routes>
-          <Route path="/" element={<Home />}></Route>
-        </Routes>
       </HashRouter>
     </HelmetProvider>
   );
