@@ -63,10 +63,10 @@ export const FeedGrid: React.FC<{items: EnrichedFeedItem[], id: string}> = ({ite
                         <div className="card">
                             {item.media?.url && <img src={item.media.url} className="card-img-top" alt={[item.media.description, item.media.credit].filter(e => !!e?.trim()).join(' // ')} />}
                             <div className="card-body">
-                                <h5 className="card-title">{item.title}</h5>
-                                {item.description && <p className="card-text">{item.description}</p>}
-                                <small className="text-muted">Published {timeDifference(Date.now(), item.publishedAt.getTime())}</small>
-                                {/*<a href="#" className="btn btn-primary">Go somewhere</a>*/}
+                                <h5 className="card-title" dangerouslySetInnerHTML={{__html: item.title}}></h5>
+                                {item.description && <p className="card-text" dangerouslySetInnerHTML={{__html: item.description}}></p>}
+                                <p><small className="text-muted">Published {timeDifference(Date.now(), item.publishedAt.getTime())}</small></p>
+                                <p><small className="text-muted"><a href={item.url} target={'_blank'} className="text-muted stretched-link">Read this article <i className="bi bi-box-arrow-up-right"></i></a></small></p>
                             </div>
                             <div className="card-footer">
                                 <a href={item.from_url} target={"_blank"} rel={"nofollow external"}>

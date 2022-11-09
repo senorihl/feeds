@@ -27,9 +27,6 @@ const BootstrapNavLink: React.FC<NavLinkProps> = (props) => {
 };
 
 const App: React.FC = () => {
-  const helmetContext = {
-    titleTemplate: "%s | MyAwesomeWebsite.com"
-  };
   return (
     <HelmetProvider>
       <Helmet titleTemplate={"%s | Feeds"}></Helmet>
@@ -41,7 +38,7 @@ const App: React.FC = () => {
               to={"/"}
               className="navbar-brand"
             >
-              <img src={logoSrc} height={40} />
+              <img src={logoSrc} height={40} alt={"feeds logo"} />
             </Link>
             <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
