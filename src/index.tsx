@@ -7,6 +7,16 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import "./index.scss";
 
+if (!__DEV__ && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register(`${window.location.pathname}service-worker.js`).then(registration => {
+            console.log('SW registered: ', registration);
+        }).catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+        });
+    });
+}
+
 const container = document.getElementById("root")!;
 const root = createRoot(container);
 

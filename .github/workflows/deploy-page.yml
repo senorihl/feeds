@@ -41,9 +41,7 @@ jobs:
       - name: Setup Cache
         uses: actions/cache@v3
         with:
-          path: |
-            node_modules
-            vendor
+          path: node_modules
           key: ${{ runner.os }}-dependencies-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-dependencies-
@@ -54,7 +52,7 @@ jobs:
       - name: Build app
         run: |
           yarn
-          yarn build --mode=production
+          BUILD_TYPE=production yarn build --mode=production
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
