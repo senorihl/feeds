@@ -175,7 +175,13 @@ function parseRSSFeed<T extends boolean = false>(parser: Document, url: string, 
                             break;
                     }
                 });
+            }
 
+            if (!media) {
+                const enclosure = Array.from(item.children).find((val) => val.nodeName === 'enclosure');
+                if (enclosure && typeof enclosure.getAttribute('url') === "string") {
+                    media = {url: enclosure.getAttribute('url') as string};
+                }
             }
 
             return {
