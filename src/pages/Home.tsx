@@ -5,7 +5,7 @@ import {FeedGrid} from "../features/FeedGrid";
 import {refreshFeeds} from "../app/slice/feeds";
 
 export const Home: React.FC = () => {
-    const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
   const items = useItems();
 
   return (
