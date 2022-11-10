@@ -1,6 +1,7 @@
 import React from "react";
 import {Feed, FeedItem} from "../app/slice/feeds";
 import Masonry from "masonry-layout";
+import {timeDifference, useNow} from "../utils/date";
 
 export interface EnrichedFeedItem extends FeedItem {
     from: Feed["title"];
@@ -8,43 +9,10 @@ export interface EnrichedFeedItem extends FeedItem {
     from_url: string;
 }
 
-function timeDifference(current: number, previous: number) {
-    const msPerMinute = 60 * 1000;
-    const msPerHour = msPerMinute * 60;
-    const msPerDay = msPerHour * 24;
-    const msPerMonth = msPerDay * 30;
-    const elapsed = current - previous;
-
-    if (elapsed < msPerMinute) {
-        const plural = Math.round(elapsed/1000) === 1 ? '' : 's';
-        return Math.round(elapsed/1000) + ' second' + plural + ' ago';
-    }
-
-    else if (elapsed < msPerHour) {
-        const plural = Math.round(elapsed/msPerMinute) === 1 ? '' : 's';
-        return Math.round(elapsed/msPerMinute) + ' minute' + plural + '  ago';
-    }
-
-    else if (elapsed < msPerDay ) {
-        const plural = Math.round(elapsed/msPerHour) === 1 ? '' : 's';
-        return Math.round(elapsed/msPerHour ) + ' hour' + plural + '  ago';
-    }
-
-    else if (elapsed < msPerMonth) {
-        const plural = Math.round(elapsed/msPerDay) === 1 ? '' : 's';
-        return Math.round(elapsed/msPerDay) + ' day' + plural + '  ago';
-    }
-
-    else {
-        const date = new Date();
-        date.setTime(previous)
-        return 'on ' + date.toLocaleDateString();
-    }
-}
-
 export const FeedGrid: React.FC<{items: EnrichedFeedItem[], id: string}> = ({items, id}) => {
     const elem = React.createRef<HTMLDivElement>();
     const msnry = React.useRef<Masonry>();
+    const now = useNow();
 
     React.useEffect(() => {
         if (elem.current) {
@@ -55,6 +23,7 @@ export const FeedGrid: React.FC<{items: EnrichedFeedItem[], id: string}> = ({ite
             msnry.current?.layout();
         }, 500)
     }, [items, elem]);
+
     return (
         <div className={"row"} id={id} ref={elem}>
             {items.map((item) => {
@@ -65,13 +34,13 @@ export const FeedGrid: React.FC<{items: EnrichedFeedItem[], id: string}> = ({ite
                             <div className="card-body">
                                 <h5 className="card-title" dangerouslySetInnerHTML={{__html: item.title}}></h5>
                                 {item.description && <p className="card-text" dangerouslySetInnerHTML={{__html: item.description}}></p>}
-                                <p><small className="text-muted">Published {timeDifference(Date.now(), item.publishedAt.getTime())}</small></p>
+                                <p><small className="text-muted">Published {timeDifference(now, item.publishedAt.getTime())}</small></p>
                                 <p><small className="text-muted"><a href={item.url} target={'_blank'} className="text-muted stretched-link">Read this article <i className="bi bi-box-arrow-up-right"></i></a></small></p>
                             </div>
                             <div className="card-footer">
                                 <a href={item.from_url} target={"_blank"} rel={"nofollow external"}>
                                     <small className="text-muted">
-                                        <img src={item.favicon} alt="" height={16} className={'mr-1'} /> {item.from} <i className="bi bi-box-arrow-up-right"></i>
+                                        <img style={{display: 'inline-block'}} src={item.favicon} alt="" height={16} className={'mr-1'} /> {item.from} <i className="bi bi-box-arrow-up-right"></i>
                                     </small>
                                 </a>
                             </div>

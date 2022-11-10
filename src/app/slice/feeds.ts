@@ -30,12 +30,21 @@ export interface Feed {
     disabled?: boolean
 }
 
+export enum FetchState {
+    FETCHING,
+    SUCCESS,
+    ERRORED
+}
+
 interface InitialState {
     feeds: { [url: string]: Feed };
+    lastUpdate?: number;
+    state: FetchState
 };
 
 const initialState: InitialState = {
     feeds: {},
+    state: FetchState.SUCCESS
 }
 
 export const refreshFeeds = createAsyncThunk<{ [url: string]: Pick<Feed, 'items'> }>(
@@ -90,9 +99,20 @@ export const feedSlice = createSlice({
                 state.feeds[action.payload].disabled = !state.feeds[action.payload].disabled;
             }
         },
+        cleanFeeds(state) {
+            Object.keys(state.feeds).forEach(key => {
+                state.feeds[key].items = [];
+            })
+        }
     },
     extraReducers(builder) {
         builder
+            .addCase(refreshFeeds.pending, (state, ...rest) => {
+                state.state = FetchState.FETCHING;
+            })
+            .addCase(refreshFeeds.rejected, (state) => {
+                state.state = FetchState.ERRORED;
+            })
             .addCase(addFeed.fulfilled, (state, action) => {
                 if (action.payload && Object.keys(state.feeds).indexOf(action.payload.url) === -1) {
                     state.feeds[action.payload.url] = {...action.payload, items: []};
@@ -107,9 +127,16 @@ export const feedSlice = createSlice({
                         );
                     }
                 }
+                state.lastUpdate = Date.now();
+                state.state = FetchState.SUCCESS;
             })
     },
 });
+
+export const cleanFeeds = () => async (dispatch: AppDispatch) => {
+    await dispatch(feedSlice.actions.cleanFeeds() as any);
+    await dispatch(refreshFeeds() as any);
+}
 
 export const {toggleFeed} = feedSlice.actions;
 

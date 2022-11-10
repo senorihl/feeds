@@ -14,7 +14,6 @@ export const router = createHashRouter([
                 element: <Home />,
                 path: "/",
                 loader: () => {
-                    console.log('Home loader')
                     store.dispatch(refreshFeeds() as any)
                 }
             },

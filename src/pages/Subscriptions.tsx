@@ -1,7 +1,7 @@
 import React from "react";
 import {Helmet} from "react-helmet-async";
 import {useAppDispatch, useAppSelector} from "../app/hooks";
-import {isValidFeed, toggleFeed, verifyAndAddFeed} from "../app/slice/feeds";
+import {cleanFeeds, isValidFeed, toggleFeed, verifyAndAddFeed} from "../app/slice/feeds";
 import {TimeoutId} from "@reduxjs/toolkit/dist/query/core/buildMiddleware/types";
 import axios from "axios";
 
@@ -17,6 +17,7 @@ export const Subscriptions: React.FC = () =>  {
     const capping = React.useRef<TimeoutId | null>(null);
     const dispatch = useAppDispatch();
     const sources = useAppSelector(state => state.feeds.feeds);
+    const itemCount = useAppSelector(state => Object.values(state.feeds.feeds).reduce((acc, feed) => acc + feed.items.length, 0));
     const [nextFeed, setNextFeed] = React.useState(process.env.NODE_ENV !== 'production' ?  'https://www.lexpress.fr/rss/alaune.xml' : '');
     const [isValid, setIsValid] = React.useState<FEED_VALIDITY>(FEED_VALIDITY.NONE);
 
@@ -42,7 +43,7 @@ export const Subscriptions: React.FC = () =>  {
     }, [nextFeed])
 
     return (
-        <>
+        <div className="container-fluid mt-3">
             <Helmet>
                 <title>Subscriptions</title>
             </Helmet>
@@ -74,11 +75,20 @@ export const Subscriptions: React.FC = () =>  {
                             await dispatch(verifyAndAddFeed(nextFeed) as any)
                         } finally {
                             setIsValid(FEED_VALIDITY.NONE)
-                            setNextFeed('')
                         }
-                    }}>Ajouter</button>
+                    }}>Add</button>
+                </div>
+                <div className="col-auto">
+                    <button type="button" className="btn btn-warning" onClick={async () => {
+                        setIsValid(FEED_VALIDITY.ADDING)
+                        try {
+                            await dispatch(cleanFeeds() as any)
+                        } finally {
+                            setIsValid(FEED_VALIDITY.NONE)
+                        }
+                    }}>Clean feed ({itemCount})</button>
                 </div>
             </div>
-        </>
+        </div>
     )
 }

@@ -7,7 +7,6 @@ export const PageLayout: React.FC<OutletProps> = () => {
         <>
             <nav className="navbar navbar-expand-lg bg-light">
               <div className="container-fluid">
-
               <Link
                 to={"/"}
                 className="navbar-brand"
@@ -28,9 +27,7 @@ export const PageLayout: React.FC<OutletProps> = () => {
               </div>
               </div>
             </nav>
-            <div className="container-fluid mt-3">
-                <Outlet />
-            </div>
+            <Outlet />
         </>
     )
 }
