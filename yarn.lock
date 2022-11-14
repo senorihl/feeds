@@ -2080,6 +2080,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/gtag.js@^0.0.12":
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/@types/gtag.js/-/gtag.js-0.0.12.tgz#095122edca896689bdfcdd73b057e23064d23572"
+  integrity sha512-YQV9bUsemkzG81Ea295/nF/5GijnD2Af7QhEofh7xu+kvCN6RdodgNwwGWXB5GMI3NoyvQo0odNctoH/qLMIpg==
+
 "@types/hoist-non-react-statics@*", "@types/hoist-non-react-statics@^3.3.1":
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/@types/hoist-non-react-statics/-/hoist-non-react-statics-3.3.1.tgz#1124aafe5118cb591977aeb1ceaaed1070eb039f"
@@ -2558,36 +2563,6 @@
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/@webpack-cli/serve/-/serve-1.7.0.tgz#e1993689ac42d2b16e9194376cfb6753f6254db1"
   integrity sha512-oxnCNGj88fL+xzV+dacXs44HcDwf1ovs3AuEzvP7mqXw7fQntqIhQ1BRmynh4qEKQSSSRSWVyXRjmTbZIX9V2Q==
-
-"@xstyled/core@^3.7.0":
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/@xstyled/core/-/core-3.7.0.tgz#b6ea2c4b059ca9d808ffdf3800406eaddd2a9491"
-  integrity sha512-4U7PnDf4DnCWPwLRpyyCocQXod5T3Ap+h0nIwdJyZtHB35sjUXsEO8Cp8wP9lqbn/bnWkqhaL79StjUEmIIvrQ==
-  dependencies:
-    "@xstyled/system" "^3.7.0"
-    "@xstyled/util" "^3.7.0"
-
-"@xstyled/styled-components@^3.7.0":
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/@xstyled/styled-components/-/styled-components-3.7.0.tgz#28c9ca3ee675fa320faeccbb4c20116b0c98ec25"
-  integrity sha512-5zUmlC6v3wvBPHrhFUawu0FBYwHzGTFlGZYrZob54QMu9Sv1tFjgMVwGCp4uOLK9kVrRVyTVwWXejKXpyeGFVg==
-  dependencies:
-    "@xstyled/core" "^3.7.0"
-    "@xstyled/system" "^3.7.0"
-    "@xstyled/util" "^3.7.0"
-
-"@xstyled/system@^3.7.0":
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/@xstyled/system/-/system-3.7.0.tgz#ed2c4f87c62eead93e112e71147fd816699759a3"
-  integrity sha512-110+yxP3zJSCr6Qyy89GMvaKhrR/3ezVyAGVOYsyUBz2u0+p3uAJ7uHKro2Pcwbt7V6oc7D5nTQVaOLasKMPCg==
-  dependencies:
-    "@xstyled/util" "^3.7.0"
-    csstype "^3.1.1"
-
-"@xstyled/util@^3.7.0":
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/@xstyled/util/-/util-3.7.0.tgz#513c045dda0847d43b39612b6d36cc38b507e82d"
-  integrity sha512-rYtXRcNh+pgRxGnciP0Mas21mpyOzcCTVy7w9uIByQk3EytwBQjDiN6wCasXibkw49Urfti5efsklRbCl5QZww==
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
@@ -3779,7 +3754,7 @@ cssstyle@^2.3.0:
   dependencies:
     cssom "~0.3.6"
 
-csstype@^3.0.2, csstype@^3.1.1:
+csstype@^3.0.2:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.1.1.tgz#841b532c45c758ee546a11d5bd7b7b473c8c30b9"
   integrity sha512-DJR/VvkAvSZW9bTouZue2sSxDwdTN92uHjqeKVm+0dAqdfNykRzQ95tay8aXMBAAPpUiq4Qcug2L7neoRh2Egw==

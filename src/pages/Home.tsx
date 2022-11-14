@@ -3,9 +3,10 @@ import { Helmet } from "react-helmet-async";
 import {useAppDispatch, useAppSelector, useItems} from "../app/hooks";
 import {FeedGrid} from "../features/FeedGrid";
 import {FetchState, refreshFeeds} from "../app/slice/feeds";
-import styled from '@xstyled/styled-components'
+import styled from 'styled-components'
 import {useNow, timeDifference} from "../utils/date";
 import {ActivityIndicator} from "../components/ActivityIndicator";
+import {PageView} from "../utils/gtag";
 
 const TopStickyContainer = styled.div`
 background-color: gray-200;
@@ -44,6 +45,7 @@ export const Home: React.FC = () => {
       <Helmet>
         <title>Yours</title>
       </Helmet>
+        <PageView page_title={'Home'} />
         <TopStickyContainer className="sticky-top pt-2 pb-2 mb-3 ">
             <div className="container-fluid">
                 <div className={"row"}>

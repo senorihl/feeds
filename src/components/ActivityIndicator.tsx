@@ -1,5 +1,5 @@
 import React from "react";
-import styled, {keyframes} from "@xstyled/styled-components";
+import styled, {keyframes} from "styled-components";
 
 const Holder = styled.div<{size: number}>`
   display: inline-block;
