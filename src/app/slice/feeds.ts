@@ -52,7 +52,12 @@ export const refreshFeeds = createAsyncThunk<{ [url: string]: Pick<Feed, 'items'
     // if you type your function argument here
     async (_, {getState}) => {
         const ret: { [url: string]: Pick<Feed, 'items'> } = {};
-        const feeds = Object.keys((getState() as RootState).feeds.feeds);
+        const feeds = Object.values((getState() as RootState).feeds.feeds).reduce((acc, curr) => {
+            if (typeof curr.disabled === 'undefined' || !curr.disabled) {
+                acc.push(curr.url);
+            }
+            return acc
+        }, [] as string[]);
 
         const refreshed = await Promise.allSettled(feeds.map(async (url) => {
             const response = await axios.get(__PROXY__ + url);
@@ -104,23 +109,8 @@ export const feedSlice = createSlice({
                 state.feeds[key].items = [];
             })
         },
-        mergeFeeds(state, action: PayloadAction<InitialState['feeds'] & {lastUpdate: number}>) {
-            Object.keys(state.feeds).forEach(key => {
-                if (key !== 'lastUpdate' && typeof action.payload[key] !== 'undefined') {
-                    state.feeds[key].items = uniqBy(
-                        [...state.feeds[key].items, ...action.payload[key].items],
-                        ({ url }) => url
-                    );
-                }
-            });
+        __rawAddFeed(state, action: PayloadAction<Omit<Feed, 'items'>>) {
 
-            Object.keys(action.payload).forEach(key => {
-                if (key !== 'lastUpdate' && typeof state.feeds[key] === 'undefined') {
-                    state.feeds[key] = action.payload[key];
-                }
-            });
-
-            delete state.feeds['lastUpdate'];
         }
     },
     extraReducers(builder) {
@@ -139,12 +129,10 @@ export const feedSlice = createSlice({
             .addCase(refreshFeeds.fulfilled, (state, action) => {
                 for (const url in action.payload) {
                     if (action.payload && Object.keys(state.feeds).indexOf(url) > -1) {
-                        state.feeds[url].items = dropRight(orderBy(uniqBy(
+                        state.feeds[url].items = orderBy(uniqBy(
                             [...state.feeds[url].items, ...action.payload[url].items],
                             ({ url }) => url
-                        ), ({publishedAt}) => publishedAt),
-                            20
-                        );
+                        ), ({publishedAt}) => publishedAt);
                     }
                 }
                 state.lastUpdate = Date.now();
@@ -158,7 +146,7 @@ export const cleanFeeds = () => async (dispatch: AppDispatch) => {
     await dispatch(refreshFeeds() as any);
 }
 
-export const {toggleFeed, mergeFeeds} = feedSlice.actions;
+export const {toggleFeed, __rawAddFeed} = feedSlice.actions;
 
 export const isValidFeed = (response: AxiosResponse) => {
     if (response.status !== 200) {

@@ -5,7 +5,8 @@ import {router} from "./router";
 import {useUser, useFirebaseApp} from "./utils/firebase";
 import {store} from "./app/store";
 import {doc, setDoc, getDoc} from "firebase/firestore";
-import {Feed, mergeFeeds} from "./app/slice/feeds";
+import {Feed, __rawAddFeed,refreshFeeds} from "./app/slice/feeds";
+import {unionBy} from "lodash";
 
 const App: React.FC = () => {
     const user = useUser();
@@ -13,30 +14,42 @@ const App: React.FC = () => {
 
     React.useEffect(() => store.subscribe(async () => {
         if (user) {
-            const {feeds: current, lastUpdate} = store.getState().feeds;
-            const saved = await getDoc<typeof current>(doc(firestore, user.uid, 'feeds'));
-            const hasDiff = saved.data()?.lastUpdate !== lastUpdate;
-            const totalItems = Object.keys(current).reduce((acc, key) => {
+            const {feeds: current} = store.getState().feeds;
+            const snpsht = await getDoc(doc(firestore, user.uid, 'feeds'));
+            const saved = (snpsht.data() as {feeds?: Array<Omit<Feed, 'items'>>})?.feeds;
+            const feeds = Object.keys(current).reduce((acc, key) => {
                 if (typeof current[key] === 'object') {
-                    acc += current[key].items.length;
+                    const {items, ...lightweight} = current[key];
+                    acc.push(lightweight)
                 }
-
                 return acc;
-            }, 0);
+            }, [] as Array<Omit<Feed, 'items'>>);
 
-            if (!saved.exists() || hasDiff) {
-                if (totalItems > 0) {
-                    await setDoc(doc(firestore, user.uid, 'feeds'), {
-                        lastUpdate,
-                        ...current,
-                    }, {merge: true});
-                } else {
-                    await setDoc(doc(firestore, user.uid, 'feeds'), {lastUpdate});
-                }
+            const unionned = unionBy(feeds, saved, 'url');
+
+            console.log('from state', feeds, 'from store', saved, 'union', unionned);
+
+            const hasDiff = JSON.stringify(unionned) !== JSON.stringify(saved);
+
+            if (!snpsht.exists()) {
+                await setDoc(doc(firestore, user.uid, 'feeds'), {feeds: unionned});
+                return;
             }
 
             if (hasDiff) {
-                store.dispatch(mergeFeeds(saved.data() as {[url: string]: Feed} & { lastUpdate: number }))
+                await setDoc(doc(firestore, user.uid, 'feeds'), {feeds: unionned});
+                let missing = false;
+                unionned.forEach((item) => {
+                    if (typeof current[item.url] === 'undefined') {
+                        store.dispatch(__rawAddFeed(item));
+                        missing = true;
+                    }
+                });
+
+                if (missing) {
+                    console.log('refresh trigerred')
+                    store.dispatch(refreshFeeds() as any);
+                }
             }
         }
 
