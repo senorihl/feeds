@@ -33,6 +33,8 @@ const App: React.FC = () => {
 
             const unionned = unionBy(feeds, saved, 'url');
 
+            console.log({unionned, feeds, saved})
+
             const hasDiff = JSON.stringify(unionned) !== JSON.stringify(saved);
 
             if (!snpsht.exists()) {
