@@ -16,9 +16,15 @@ const App: React.FC = () => {
         if (user) {
             const {feeds: current} = store.getState().feeds;
             const snpsht = await getDoc(doc(firestore, user.uid, 'feeds'));
-            const saved = (snpsht.data() as {feeds?: Array<Omit<Feed, 'items'>>})?.feeds;
+            const saved = ((snpsht.data() as {feeds?: Array<Omit<Feed, 'items'>>})?.feeds || []).reduce((acc, item) => {
+                if (typeof item === 'object' && typeof item.url === "string") {
+                    acc.push(item)
+                }
+                return acc;
+            }, [] as Array<Omit<Feed, 'items'>>);
+
             const feeds = Object.keys(current).reduce((acc, key) => {
-                if (typeof current[key] === 'object') {
+                if (typeof current[key] === 'object' && typeof current[key].url === "string") {
                     const {items, ...lightweight} = current[key];
                     acc.push(lightweight)
                 }
@@ -26,8 +32,6 @@ const App: React.FC = () => {
             }, [] as Array<Omit<Feed, 'items'>>);
 
             const unionned = unionBy(feeds, saved, 'url');
-
-            console.log('from state', feeds, 'from store', saved, 'union', unionned);
 
             const hasDiff = JSON.stringify(unionned) !== JSON.stringify(saved);
 
@@ -40,14 +44,13 @@ const App: React.FC = () => {
                 await setDoc(doc(firestore, user.uid, 'feeds'), {feeds: unionned});
                 let missing = false;
                 unionned.forEach((item) => {
-                    if (typeof current[item.url] === 'undefined') {
+                    if (typeof current[item.url] === 'undefined' && typeof item.url === 'string') {
                         store.dispatch(__rawAddFeed(item));
                         missing = true;
                     }
                 });
 
                 if (missing) {
-                    console.log('refresh trigerred')
                     store.dispatch(refreshFeeds() as any);
                 }
             }
