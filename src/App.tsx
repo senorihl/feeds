@@ -8,57 +8,61 @@ import {doc, setDoc, getDoc} from "firebase/firestore";
 import {Feed, __rawAddFeed,refreshFeeds} from "./app/slice/feeds";
 import {unionBy} from "lodash";
 
+const refreshStateFromFirestore = async (firestore: ReturnType<typeof useFirebaseApp>["store"], user: ReturnType<typeof useUser>) => {
+    if (user) {
+        const {feeds: current} = store.getState().feeds;
+        const snpsht = await getDoc(doc(firestore, user.uid, 'feeds'));
+        const saved = ((snpsht.data() as {feeds?: Array<Omit<Feed, 'items'>>})?.feeds || []).reduce((acc, item) => {
+            if (typeof item === 'object' && typeof item.url === "string") {
+                acc.push(item)
+            }
+            return acc;
+        }, [] as Array<Omit<Feed, 'items'>>);
+
+        const feeds = Object.keys(current).reduce((acc, key) => {
+            if (typeof current[key] === 'object' && typeof current[key].url === "string") {
+                const {items, ...lightweight} = current[key];
+                acc.push(lightweight)
+            }
+            return acc;
+        }, [] as Array<Omit<Feed, 'items'>>);
+
+        const unionned = unionBy(feeds, saved, 'url');
+
+        const hasDiff = JSON.stringify(unionned) !== JSON.stringify(saved);
+
+        if (!snpsht.exists()) {
+            await setDoc(doc(firestore, user.uid, 'feeds'), {feeds: unionned});
+            return;
+        }
+
+        if (hasDiff) {
+            await setDoc(doc(firestore, user.uid, 'feeds'), {feeds: unionned});
+            let missing = false;
+            unionned.forEach((item) => {
+                if (typeof current[item.url] === 'undefined' && typeof item.url === 'string') {
+                    store.dispatch(__rawAddFeed(item));
+                    missing = true;
+                }
+            });
+
+            if (missing) {
+                store.dispatch(refreshFeeds() as any);
+            }
+        }
+    }
+}
+
 const App: React.FC = () => {
     const user = useUser();
     const {store: firestore} = useFirebaseApp();
 
-    React.useEffect(() => store.subscribe(async () => {
-        if (user) {
-            const {feeds: current} = store.getState().feeds;
-            const snpsht = await getDoc(doc(firestore, user.uid, 'feeds'));
-            const saved = ((snpsht.data() as {feeds?: Array<Omit<Feed, 'items'>>})?.feeds || []).reduce((acc, item) => {
-                if (typeof item === 'object' && typeof item.url === "string") {
-                    acc.push(item)
-                }
-                return acc;
-            }, [] as Array<Omit<Feed, 'items'>>);
-
-            const feeds = Object.keys(current).reduce((acc, key) => {
-                if (typeof current[key] === 'object' && typeof current[key].url === "string") {
-                    const {items, ...lightweight} = current[key];
-                    acc.push(lightweight)
-                }
-                return acc;
-            }, [] as Array<Omit<Feed, 'items'>>);
-
-            const unionned = unionBy(feeds, saved, 'url');
-
-            console.log({unionned, feeds, saved})
-
-            const hasDiff = JSON.stringify(unionned) !== JSON.stringify(saved);
-
-            if (!snpsht.exists()) {
-                await setDoc(doc(firestore, user.uid, 'feeds'), {feeds: unionned});
-                return;
-            }
-
-            if (hasDiff) {
-                await setDoc(doc(firestore, user.uid, 'feeds'), {feeds: unionned});
-                let missing = false;
-                unionned.forEach((item) => {
-                    if (typeof current[item.url] === 'undefined' && typeof item.url === 'string') {
-                        store.dispatch(__rawAddFeed(item));
-                        missing = true;
-                    }
-                });
-
-                if (missing) {
-                    store.dispatch(refreshFeeds() as any);
-                }
-            }
-        }
-
-    }), [user])
+    React.useEffect(() => {
+        refreshStateFromFirestore(firestore, user);
+        return store.subscribe(async () => {
+            await refreshStateFromFirestore(firestore, user);
+        });
+    }, [user])
 
 
     return (
