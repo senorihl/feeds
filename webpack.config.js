@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CompressionPlugin = require("compression-webpack-plugin");
 const WorkboxPlugin = require('workbox-webpack-plugin');
+const CopyPlugin = require("copy-webpack-plugin");
 
 const mode = process.env.BUILD_TYPE || 'development';
 
@@ -65,6 +66,11 @@ module.exports = {
       __MODE__: JSON.stringify(mode),
       __DEV__: JSON.stringify(mode === 'development'),
       __PROXY__: JSON.stringify('https://us-central1-lobs-159411.cloudfunctions.net/cors-anywhere/?u=')
+    }),
+    new CopyPlugin({
+      patterns: [
+        { from: "./assets", to: "" },
+      ],
     }),
     new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({

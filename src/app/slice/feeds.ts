@@ -110,6 +110,7 @@ export const feedSlice = createSlice({
             })
         },
         __rawAddFeed(state, action: PayloadAction<Omit<Feed, 'items'>>) {
+            console.log(action);
             if (typeof state.feeds[action.payload.url] === 'undefined') {
                 state.feeds[action.payload.url] = {...action.payload, items: []};
             }
