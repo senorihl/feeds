@@ -2,7 +2,7 @@ import React from "react";
 import {Feed, FeedItem} from "../app/slice/feeds";
 import Masonry from "masonry-layout";
 import {timeDifference, useNow} from "../utils/date";
-import {useGoogleAnalytics} from "../utils/gtag";
+import {useFirebaseApp} from "../utils/firebase";
 
 export interface EnrichedFeedItem extends FeedItem {
     from: Feed["title"];
@@ -14,7 +14,7 @@ export const FeedGrid: React.FC<{items: EnrichedFeedItem[], id: string}> = ({ite
     const elem = React.createRef<HTMLDivElement>();
     const msnry = React.useRef<Masonry>();
     const now = useNow();
-    const {custom_event} = useGoogleAnalytics();
+    const {custom_event} = useFirebaseApp();
 
     React.useEffect(() => {
         if (elem.current) {

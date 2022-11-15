@@ -7,6 +7,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import "./index.scss";
 
+
 if (!__DEV__ && 'serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register(`${window.location.pathname}service-worker.js`).then(registration => {

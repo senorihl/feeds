@@ -5,6 +5,7 @@ import { Subscriptions } from "./pages/Subscriptions";
 import {PageLayout} from "./PageLayout";
 import {store} from "./app/store";
 import {refreshFeeds} from "./app/slice/feeds";
+import {Account, SignIn, LogIn} from "./pages/Account";
 
 export const router = createHashRouter([
     {
@@ -20,6 +21,18 @@ export const router = createHashRouter([
             {
                 element: <Subscriptions />,
                 path: "/subscriptions",
+            },
+            {
+                element: <Account />,
+                path: "/account",
+            },
+            {
+                element: <SignIn />,
+                path: "/sign-in",
+            },
+            {
+                element: <LogIn />,
+                path: "/log-in",
             },
         ]
     },

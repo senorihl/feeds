@@ -4,7 +4,7 @@ import {useAppDispatch, useAppSelector} from "../app/hooks";
 import {cleanFeeds, isValidFeed, toggleFeed, verifyAndAddFeed} from "../app/slice/feeds";
 import {TimeoutId} from "@reduxjs/toolkit/dist/query/core/buildMiddleware/types";
 import axios from "axios";
-import {PageView, useGoogleAnalytics} from "../utils/gtag";
+import {PageView, useFirebaseApp} from "../utils/firebase";
 
 enum FEED_VALIDITY {
     NONE,
@@ -17,7 +17,7 @@ enum FEED_VALIDITY {
 export const Subscriptions: React.FC = () =>  {
     const capping = React.useRef<TimeoutId | null>(null);
     const dispatch = useAppDispatch();
-    const {custom_event} = useGoogleAnalytics();
+    const {custom_event} = useFirebaseApp();
     const sources = useAppSelector(state => state.feeds.feeds);
     const itemCount = useAppSelector(state => Object.values(state.feeds.feeds).reduce((acc, feed) => acc + feed.items.length, 0));
     const [nextFeed, setNextFeed] = React.useState(process.env.NODE_ENV !== 'production' ?  'https://www.lexpress.fr/rss/alaune.xml' : '');
@@ -49,7 +49,7 @@ export const Subscriptions: React.FC = () =>  {
             <Helmet>
                 <title>Subscriptions</title>
             </Helmet>
-            <PageView page_title={'Subscriptions'} />
+            <PageView page_title={"Subscriptions"} />
             {Object.keys(sources).map(key => {
                 const source = sources[key];
                 return <div className="form-check form-switch" key={`div-toggle-${key}`}>

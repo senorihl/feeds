@@ -1,6 +1,6 @@
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from './store';
-import {orderBy, uniqBy} from "lodash";
+import {orderBy, uniqBy, dropRight} from "lodash";
 import {EnrichedFeedItem} from "../features/FeedGrid";
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
@@ -8,10 +8,10 @@ export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 export const useItems = (filter_source: string | null = null, sort_order: "asc" | "desc" = "desc") => {
     return  useAppSelector((state) =>
-        uniqBy(
             orderBy(
+                uniqBy(
                 Object.values(state.feeds.feeds).reduce((acc, curr) => {
-                    acc.push(
+                    typeof curr.items === 'object' && acc.push(
                         ...curr.items.map((item) => {
                             const favicon = new URL(item.url);
                             favicon.pathname = '/favicon.ico';
@@ -34,10 +34,10 @@ export const useItems = (filter_source: string | null = null, sort_order: "asc" 
                     );
                     return acc;
                 }, [] as EnrichedFeedItem[]),
+            ({ source, url }) => `${url}`,
+        ),
                 ({ publishedAt }) => publishedAt,
-                sort_order
-            ),
-            ({ source, url }) => `${source}-${url}`,
-        )
+        sort_order
+),
     );
 }

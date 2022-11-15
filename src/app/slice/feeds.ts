@@ -1,7 +1,7 @@
 import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import axios, {AxiosResponse} from 'axios';
 import {AppDispatch, RootState} from "../store";
-import {uniqBy} from "lodash";
+import {orderBy, uniqBy, dropRight} from "lodash";
 
 export interface FeedItem {
     source: string,
@@ -103,6 +103,24 @@ export const feedSlice = createSlice({
             Object.keys(state.feeds).forEach(key => {
                 state.feeds[key].items = [];
             })
+        },
+        mergeFeeds(state, action: PayloadAction<InitialState['feeds'] & {lastUpdate: number}>) {
+            Object.keys(state.feeds).forEach(key => {
+                if (key !== 'lastUpdate' && typeof action.payload[key] !== 'undefined') {
+                    state.feeds[key].items = uniqBy(
+                        [...state.feeds[key].items, ...action.payload[key].items],
+                        ({ url }) => url
+                    );
+                }
+            });
+
+            Object.keys(action.payload).forEach(key => {
+                if (key !== 'lastUpdate' && typeof state.feeds[key] === 'undefined') {
+                    state.feeds[key] = action.payload[key];
+                }
+            });
+
+            delete state.feeds['lastUpdate'];
         }
     },
     extraReducers(builder) {
@@ -121,9 +139,11 @@ export const feedSlice = createSlice({
             .addCase(refreshFeeds.fulfilled, (state, action) => {
                 for (const url in action.payload) {
                     if (action.payload && Object.keys(state.feeds).indexOf(url) > -1) {
-                        state.feeds[url].items = uniqBy(
+                        state.feeds[url].items = dropRight(orderBy(uniqBy(
                             [...state.feeds[url].items, ...action.payload[url].items],
                             ({ url }) => url
+                        ), ({publishedAt}) => publishedAt),
+                            20
                         );
                     }
                 }
@@ -138,7 +158,7 @@ export const cleanFeeds = () => async (dispatch: AppDispatch) => {
     await dispatch(refreshFeeds() as any);
 }
 
-export const {toggleFeed} = feedSlice.actions;
+export const {toggleFeed, mergeFeeds} = feedSlice.actions;
 
 export const isValidFeed = (response: AxiosResponse) => {
     if (response.status !== 200) {
