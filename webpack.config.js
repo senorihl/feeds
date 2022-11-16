@@ -3,14 +3,16 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CompressionPlugin = require("compression-webpack-plugin");
-const WorkboxPlugin = require('workbox-webpack-plugin');
 const CopyPlugin = require("copy-webpack-plugin");
 
 const mode = process.env.BUILD_TYPE || 'development';
 
 module.exports = {
   mode,
-  entry: "./src/index.tsx",
+  entry: {
+    main: "./src/index.tsx",
+    service_worker: "./src/service_worker.tsx",
+  },
   devtool: mode === 'production' ? false : 'inline-source-map',
   module: {
     rules: [
@@ -58,7 +60,7 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js", ".css", ".scss"]
   },
   output: {
-    filename: "index.js",
+    filename: "[name].js",
     path: path.resolve(__dirname, "build"),
   },
   plugins: [
@@ -77,15 +79,16 @@ module.exports = {
       template: 'src/index.html',
       title: 'Feeds',
       hash: true,
+      chunks: ['main']
     }),
   ].concat(mode !== 'production' ? [] : [
     new CompressionPlugin({
       test: /\.js$|\.css$|\.html$/,
       threshold: 10240,
     }),
-    new WorkboxPlugin.GenerateSW({
-      clientsClaim: true,
-      skipWaiting: true,
-    }),
+    // new WorkboxPlugin.GenerateSW({
+    //   clientsClaim: true,
+    //   skipWaiting: true,
+    // }),
   ]),
 };

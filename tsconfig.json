@@ -9,8 +9,10 @@
     "allowJs": true,
     "moduleResolution": "node",
     "lib": [
+      "esnext",
       "dom",
-      "dom.iterable"
+      "dom.iterable",
+      "WebWorker"
     ],
     "skipLibCheck": true,
     "esModuleInterop": true,

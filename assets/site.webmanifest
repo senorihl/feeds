@@ -3,17 +3,20 @@
     "short_name": "Feeds",
     "icons": [
         {
-            "src": "/feeds/favicon.png/android-chrome-192x192.png",
+            "src": "android-chrome-192x192.png",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "/feeds/favicon.png/android-chrome-256x256.png",
+            "src": "android-chrome-256x256.png",
             "sizes": "256x256",
             "type": "image/png"
         }
     ],
     "theme_color": "#179afd",
     "background_color": "#179afd",
-    "display": "standalone"
+    "display": "fullscreen",
+    "Scope": "/",
+    "orientation": "portrait",
+    "start_url": "/"
 }

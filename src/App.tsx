@@ -55,6 +55,13 @@ const refreshStateFromFirestore = async (firestore: ReturnType<typeof useFirebas
     }
 }
 
+let displayMode = 'browser';
+const mqStandAlone = '(display-mode: standalone)';
+// @ts-ignore
+if (navigator.standalone || window.matchMedia(mqStandAlone).matches) {
+    displayMode = 'standalone';
+}
+
 const App: React.FC = () => {
     const user = useUser();
     const {store: firestore} = useFirebaseApp();
@@ -69,7 +76,7 @@ const App: React.FC = () => {
 
     return (
         <HelmetProvider>
-            <Helmet titleTemplate={"%s | Feeds"}></Helmet>
+            <Helmet titleTemplate={displayMode === 'browser' ? "%s | Feeds" : "%s"}></Helmet>
             <RouterProvider router={router}/>
         </HelmetProvider>
     )

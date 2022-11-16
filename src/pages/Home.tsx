@@ -46,7 +46,7 @@ export const Home: React.FC = () => {
         <title>Yours</title>
       </Helmet>
         <PageView page_title={"Home"} />
-        <TopStickyContainer className="sticky-top pt-2 pb-2 mb-3 ">
+        <TopStickyContainer className="sticky-top pt-2 pb-2 mb-3 bg-light">
             <div className="container-fluid">
                 <div className={"row"}>
                     <div className={`col text-muted ${!lastUpdate ? 'text-center' : 'text-start'}`}>
