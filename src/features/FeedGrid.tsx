@@ -64,7 +64,7 @@ export const FeedGrid: React.FC<{items: EnrichedFeedItem[], id: string}> = ({ite
                                     }}>
                                     <h5 className="card-title" dangerouslySetInnerHTML={{__html: item.title}} />
                                     {item.description && <p className="card-text" dangerouslySetInnerHTML={{__html: item.description}}></p>}
-                                    <p className={'mb-0'}><small className="text-muted">Published {timeDifference(now, item.publishedAt.getTime())}</small></p>
+                                    {!!item.publishedAt && <p className={'mb-0'}><small className="text-muted">Published {timeDifference(now, item.publishedAt.getTime())}</small></p>}
                                 </a>
                             </div>
                             <div className="card-footer">
