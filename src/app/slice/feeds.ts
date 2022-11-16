@@ -2,6 +2,8 @@ import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import axios, {AxiosResponse} from 'axios';
 import {AppDispatch, RootState} from "../store";
 import {orderBy, uniqBy, dropRight} from "lodash";
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
+import { getApp } from "firebase/app";
 
 export interface FeedItem {
     source: string,
@@ -39,19 +41,20 @@ export enum FetchState {
 interface InitialState {
     feeds: { [url: string]: Feed };
     lastUpdate?: number;
-    state: FetchState
+    state: FetchState;
+    user?: string;
 };
 
 const initialState: InitialState = {
     feeds: {},
-    state: FetchState.SUCCESS
+    state: FetchState.SUCCESS,
 }
 
-export const refreshFeeds = createAsyncThunk<{ [url: string]: Pick<Feed, 'items'> }>(
+export const refreshFeeds = createAsyncThunk<{ [url: string]: Feed }>(
     'feeds/refreshFeeds',
     // if you type your function argument here
     async (_, {getState}) => {
-        const ret: { [url: string]: Pick<Feed, 'items'> } = {};
+        const ret: { [url: string]: Feed } = {};
         const feeds = Object.values((getState() as RootState).feeds.feeds).reduce((acc, curr) => {
             if (typeof curr.disabled === 'undefined' || !curr.disabled) {
                 acc.push(curr.url);
@@ -66,7 +69,7 @@ export const refreshFeeds = createAsyncThunk<{ [url: string]: Pick<Feed, 'items'
 
         for (const settled of refreshed) {
             if (settled.status === 'fulfilled' && settled.value) {
-                ret[settled.value.url] = {items: settled.value.items};
+                ret[settled.value.url] = settled.value;
             }
         }
 
@@ -80,9 +83,49 @@ const addFeed = createAsyncThunk<Omit<Feed, 'items'> | null, string>(
     async (url) => {
         const response = await axios.get(__PROXY__ + encodeURIComponent(url), {withCredentials: false});
 
-        return parseFeed(response.data, url, true);
+        return parseFeed(response.data, url);
     }
 )
+
+export const toggleFeed = createAsyncThunk<boolean, string>(
+    'feeds/toggleFeed',
+    // if you type your function argument here
+    async (url, {getState}) => {
+        const state = (getState() as RootState).feeds;
+        if (typeof state.feeds[url] !== 'undefined') {
+            return !state.feeds[url].disabled;
+        }
+
+        throw new Error('not found');
+    }
+)
+
+export const setUser = createAsyncThunk(
+    'feeds/setUser',
+    // if you type your function argument here
+    async (uid: string | undefined) => {
+        let feeds = {} as Awaited<ReturnType<typeof getFeedsFromFirestore>>;
+        if (uid) {
+            feeds = await getFeedsFromFirestore(uid);
+        }
+
+        return {uid, feeds};
+    }
+)
+
+export const addFeeds = (urls: Array<string>) => async (dispatch: AppDispatch) => {
+    await Promise.allSettled(urls.map(url => async () => {
+        const response = await axios.get(__PROXY__ + encodeURIComponent(url), {withCredentials: false});
+
+        if (!isValidFeed(response)) {
+            return Promise.reject();
+        }
+
+        return dispatch(addFeed(url) as any);
+    }))
+
+    await dispatch(refreshFeeds() as any);
+}
 
 export const verifyAndAddFeed = (url: string) => async (dispatch: AppDispatch) => {
     const response = await axios.get(__PROXY__ + encodeURIComponent(url), {withCredentials: false});
@@ -109,16 +152,37 @@ export const feedSlice = createSlice({
                 state.feeds[key].items = [];
             })
         },
-        __rawAddFeed(state, action: PayloadAction<Omit<Feed, 'items'>>) {
-            console.log(action);
-            if (typeof state.feeds[action.payload.url] === 'undefined') {
-                state.feeds[action.payload.url] = {...action.payload, items: []};
-            }
-        }
     },
     extraReducers(builder) {
         builder
-            .addCase(refreshFeeds.pending, (state, ...rest) => {
+            .addCase(toggleFeed.fulfilled, (state, action) => {
+                state.feeds[action.meta.arg].disabled = action.payload;
+                state.user && saveFeedsToFirestore(state.user, Object.values(state.feeds).reduce((acc, curr) => {
+                    acc[curr.url] = !curr.disabled;
+                    return acc;
+                }, {} as {[url: string]: boolean}));
+            })
+            .addCase(setUser.fulfilled, (state, action) => {
+                state.user = action.payload.uid;
+                if (state.user) {
+                    const feeds = Object.values(state.feeds).reduce((acc, curr) => {
+                        acc[curr.url] = !curr.disabled;
+                        return acc;
+                    }, {} as {[url: string]: boolean});
+                    state.feeds = {...state.feeds, ...Object.keys(action.payload.feeds).reduce((acc, key) => {
+                        acc[key] = {
+                            url: key,
+                            title: state.feeds[key]?.title || 'from store',
+                            publishedAt: state.feeds[key]?.publishedAt || new Date(),
+                            items: state.feeds[key]?.items || [],
+                            disabled: state.feeds[key]?.disabled
+                        }
+                        return acc;
+                    }, {} as typeof state.feeds)}
+                    saveFeedsToFirestore(state.user, {...feeds, ...action.payload.feeds});
+                }
+            })
+            .addCase(refreshFeeds.pending, (state) => {
                 state.state = FetchState.FETCHING;
             })
             .addCase(refreshFeeds.rejected, (state) => {
@@ -132,6 +196,9 @@ export const feedSlice = createSlice({
             .addCase(refreshFeeds.fulfilled, (state, action) => {
                 for (const url in action.payload) {
                     if (action.payload && Object.keys(state.feeds).indexOf(url) > -1) {
+                        state.feeds[url].publishedAt = action.payload[url].publishedAt;
+                        state.feeds[url].title = action.payload[url].title;
+                        state.feeds[url].description = action.payload[url].description;
                         state.feeds[url].items = orderBy(uniqBy(
                             [...state.feeds[url].items, ...action.payload[url].items],
                             ({ url }) => url
@@ -149,7 +216,7 @@ export const cleanFeeds = () => async (dispatch: AppDispatch) => {
     await dispatch(refreshFeeds() as any);
 }
 
-export const {toggleFeed, __rawAddFeed} = feedSlice.actions;
+export const {} = feedSlice.actions;
 
 export const isValidFeed = (response: AxiosResponse) => {
     if (response.status !== 200) {
@@ -170,27 +237,27 @@ export const isValidFeed = (response: AxiosResponse) => {
     );
 }
 
-function parseFeed<T extends boolean = false>(content: string, url: string, noItem?: T): null | (T extends true ? Omit<Feed, 'item'> : Feed) {
+function parseFeed(content: string, url: string): null | Feed {
     const parser = new window.DOMParser().parseFromString(content, 'text/xml');
     switch (parser.firstChild?.nodeName) {
         case "rss":
-            return parseRSSFeed(parser, url, noItem);
+            return parseRSSFeed(parser, url);
         case "feed":
-            return parseAtomFeed(parser, url, noItem);
+            return parseAtomFeed(parser, url);
         default:
             return null;
     }
 
 }
 
-function parseRSSFeed<T extends boolean = false>(parser: Document, url: string, noItem?: T): T extends true ? Omit<Feed, 'item'> : Feed {
+function parseRSSFeed(parser: Document, url: string) : Feed {
     const feed: Omit<Feed, 'items'> = {
         url,
         title: parser.querySelector('rss > channel > title')?.textContent as string,
         publishedAt: new Date(parser.querySelector('rss > channel > pubDate')?.textContent || ''),
     };
 
-    if (!noItem) {
+    
         const items = Array.from(parser.querySelectorAll('item'));
         (feed as Feed).items = items.map(item => {
             let media: null | FeedItem['media'] = null;
@@ -231,12 +298,11 @@ function parseRSSFeed<T extends boolean = false>(parser: Document, url: string, 
                 publishedAt: new Date(item.querySelector("pubDate")?.textContent || ''),
             };
         })
-    }
 
-    return feed as T extends true ? Omit<Feed, 'item'> : Feed;
+    return feed as Feed;
 }
 
-function parseAtomFeed<T extends boolean = false>(parser: Document, url: string, noItem?: T): T extends true ? Omit<Feed, 'item'> : Feed {
+function parseAtomFeed(parser: Document, url: string) : Feed {
     const feed: Omit<Feed, 'items'> = {
         url,
         title: parser.querySelector('feed > title')?.textContent as string,
@@ -244,7 +310,7 @@ function parseAtomFeed<T extends boolean = false>(parser: Document, url: string,
         publishedAt: new Date(parser.querySelector('feed > updated')?.textContent || ''),
     };
 
-    if (!noItem) {
+    
         const entries = Array.from(parser.querySelectorAll('entry'));
         (feed as Feed).items = entries.map(entry => {
             let media: null | FeedItem['media'] = null;
@@ -279,8 +345,31 @@ function parseAtomFeed<T extends boolean = false>(parser: Document, url: string,
                 updatedAt: new Date(entry.querySelector("updated")?.textContent || ''),
             };
         })
+    
+
+    return feed as Feed;
+
+}
+
+const getFeedsFromFirestore = async (uid: string) => {
+    const store = getFirestore(getApp());
+    try {
+        const snpsht = await getDoc<{[url: string]: boolean}>(doc(store, uid, 'feeds'));
+        if (snpsht.exists()) {
+            return snpsht.data();
+        }
+    } catch (e) {
+        console.warn(e)
     }
+    return {};
+}
 
-    return feed as T extends true ? Omit<Feed, 'item'> : Feed;
-
+const saveFeedsToFirestore = async (uid: string, feeds: {[url: string]: boolean}) => {
+    const store = getFirestore(getApp());
+    try {
+        await setDoc(doc(store, uid, 'feeds'), feeds);
+    } catch (e) {
+        console.warn(e)
+    }
+    
 }

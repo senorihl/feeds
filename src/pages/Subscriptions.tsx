@@ -9,7 +9,8 @@ import {
 } from "../app/slice/feeds";
 import { TimeoutId } from "@reduxjs/toolkit/dist/query/core/buildMiddleware/types";
 import axios from "axios";
-import { PageView, useFirebaseApp } from "../utils/firebase";
+import { PageView, useFirebaseApp, useUser } from "../utils/firebase";
+import { signOut } from "firebase/auth";
 
 enum FEED_VALIDITY {
   NONE,
@@ -20,7 +21,10 @@ enum FEED_VALIDITY {
 }
 
 export const Subscriptions: React.FC = () => {
+  const user = useUser();
+  const { auth } = useFirebaseApp();
   const capping = React.useRef<TimeoutId | null>(null);
+  const [disableSignOut, setSignOutDisabled] = React.useState(false);
   const dispatch = useAppDispatch();
   const { custom_event } = useFirebaseApp();
   const sources = useAppSelector((state) => state.feeds.feeds);
@@ -81,7 +85,7 @@ export const Subscriptions: React.FC = () => {
               checked={
                 typeof source.disabled === "undefined" || !source.disabled
               }
-              onChange={() => dispatch(toggleFeed(key))}
+              onChange={() => dispatch(toggleFeed(key) as any)}
               id={`${source.url}-toggle`}
             />
             <label
@@ -155,6 +159,24 @@ export const Subscriptions: React.FC = () => {
           </button>
         </div>
       </div>
+      {user?.email && (
+        <div className="row g-3 align-items-center mt-3">
+          <div className="col-auto">Currently logged in as {user.email}</div>
+          <div className="col-auto">
+            <button
+              type="button"
+              className="btn btn-warning"
+              disabled={disableSignOut}
+              onClick={() => {
+                setSignOutDisabled(true);
+                signOut(auth).finally(() => setSignOutDisabled(false));
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
