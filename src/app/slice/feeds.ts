@@ -60,7 +60,7 @@ export const refreshFeeds = createAsyncThunk<{ [url: string]: Pick<Feed, 'items'
         }, [] as string[]);
 
         const refreshed = await Promise.allSettled(feeds.map(async (url) => {
-            const response = await axios.get(__PROXY__ + url);
+            const response = await axios.get(__PROXY__ + encodeURIComponent(url), {withCredentials: false});
             return parseFeed(response.data, url);
         }))
 
@@ -78,14 +78,14 @@ const addFeed = createAsyncThunk<Omit<Feed, 'items'> | null, string>(
     'feeds/addFeed',
     // if you type your function argument here
     async (url) => {
-        const response = await axios.get(__PROXY__ + url);
+        const response = await axios.get(__PROXY__ + encodeURIComponent(url), {withCredentials: false});
 
         return parseFeed(response.data, url, true);
     }
 )
 
 export const verifyAndAddFeed = (url: string) => async (dispatch: AppDispatch) => {
-    const response = await axios.get(__PROXY__ + url);
+    const response = await axios.get(__PROXY__ + encodeURIComponent(url), {withCredentials: false});
 
     if (!isValidFeed(response)) {
         return null;
