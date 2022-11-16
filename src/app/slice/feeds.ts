@@ -8,7 +8,7 @@ export interface FeedItem {
     url: string,
     title: string,
     description?: string,
-    publishedAt: Date,
+    publishedAt: null | Date,
     updatedAt?: Date,
     media?: {
         url: string,

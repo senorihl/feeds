@@ -24,7 +24,8 @@ export const useItems = (filter_source: string | null = null, sort_order: "asc" 
                                 publishedAt: typeof item.publishedAt === "string" ? new Date(item.publishedAt) : item.publishedAt,
                                 from: state.feeds.feeds[item.source].title,
                             }
-                        }).filter(({source}) => {
+                        }).filter(({source, publishedAt}) => {
+                            if (!publishedAt) return false;
                             if (filter_source) {
                                 return filter_source === source;
                             } else {
