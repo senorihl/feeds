@@ -16,7 +16,7 @@
     "theme_color": "#179afd",
     "background_color": "#179afd",
     "display": "fullscreen",
-    "Scope": "/",
+    "Scope": ".",
     "orientation": "portrait",
-    "start_url": "/"
+    "start_url": "."
 }
