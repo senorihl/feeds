@@ -25,7 +25,8 @@ export const useItems = (filter_source: string | null = null, sort_order: "asc" 
                                 from: state.feeds.feeds[item.source].title,
                             }
                         }).filter(({source, publishedAt}) => {
-                            if (!publishedAt) return false;
+                            if (!publishedAt || publishedAt.toString() === 'Invalid Date') return false;
+                            
                             if (filter_source) {
                                 return filter_source === source;
                             } else {
