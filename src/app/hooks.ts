@@ -1,7 +1,8 @@
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from './store';
-import {orderBy, uniqBy, dropRight} from "lodash";
+import {orderBy, uniqBy} from "lodash";
 import {EnrichedFeedItem} from "../features/FeedGrid";
+import { timeDifference, useNow } from '../utils/date';
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch = () => useDispatch<AppDispatch>();
@@ -43,3 +44,9 @@ export const useItems = (filter_source: string | null = null, sort_order: "asc" 
 ),
     );
 }
+export const useLastUpdate = () => {
+  const now = useNow();
+  const lastUpdate = useAppSelector((state) => state.feeds.lastUpdate);
+  if (!lastUpdate) return null;
+  return timeDifference(now, lastUpdate);
+};

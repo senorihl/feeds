@@ -3,6 +3,7 @@ import { Feed, FeedItem } from "../app/slice/feeds";
 import Masonry from "masonry-layout";
 import { timeDifference, useNow } from "../utils/date";
 import { useFirebaseApp } from "../utils/firebase";
+import { Link } from "react-router-dom";
 
 export interface EnrichedFeedItem extends FeedItem {
   from: Feed["title"];
@@ -10,10 +11,11 @@ export interface EnrichedFeedItem extends FeedItem {
   from_url: string;
 }
 
-export const FeedGrid: React.FC<{ items: EnrichedFeedItem[]; id: string }> = ({
-  items,
-  id,
-}) => {
+export const FeedGrid: React.FC<{
+  items: EnrichedFeedItem[];
+  id: string;
+  external?: boolean;
+}> = ({ items, id, external = false }) => {
   const elem = React.createRef<HTMLDivElement>();
   const msnry = React.useRef<Masonry>();
   const now = useNow();
@@ -74,8 +76,8 @@ export const FeedGrid: React.FC<{ items: EnrichedFeedItem[]; id: string }> = ({
                     });
                   }}
                 >
-                  <h5
-                    className="card-title"
+                  <h2
+                    className="card-title h5"
                     dangerouslySetInnerHTML={{ __html: item.title }}
                   />
                   {item.description && (
@@ -95,28 +97,41 @@ export const FeedGrid: React.FC<{ items: EnrichedFeedItem[]; id: string }> = ({
                 </a>
               </div>
               <div className="card-footer">
-                <a
-                  href={item.from_url}
-                  target={"_blank"}
-                  className={"text-decoration-none text-muted"}
-                  rel={"nofollow external"}
-                  onClick={() => {
-                    custom_event("feed_click", {
-                      event_category: "Feed",
-                      event_label: item.from,
-                      value: item.from_url,
-                    });
-                  }}
-                >
-                  <img
-                    style={{ display: "inline-block" }}
-                    src={item.favicon}
-                    alt=""
-                    height={16}
-                    className={"mr-1"}
-                  />{" "}
-                  {item.from} <i className="bi bi-box-arrow-up-right"></i>
-                </a>
+                {external ? (
+                  <a
+                    href={item.from_url}
+                    target={"_blank"}
+                    className={"text-decoration-none text-muted"}
+                    rel={"nofollow external"}
+                    onClick={() => {
+                      custom_event("feed_click", {
+                        event_category: "Feed",
+                        event_label: item.from,
+                        value: item.from_url,
+                      });
+                    }}
+                  >
+                    <img
+                      style={{ display: "inline-block" }}
+                      src={item.favicon}
+                      alt=""
+                      height={16}
+                      className={"mr-1"}
+                    />{" "}
+                    {item.from} <i className="bi bi-box-arrow-up-right"></i>
+                  </a>
+                ) : (
+                  <Link to={`/feed/${encodeURIComponent(item.source)}`}>
+                    <img
+                      style={{ display: "inline-block" }}
+                      src={item.favicon}
+                      alt=""
+                      height={16}
+                      className={"mr-1"}
+                    />{" "}
+                    {item.from}
+                  </Link>
+                )}
               </div>
             </div>
           </div>
